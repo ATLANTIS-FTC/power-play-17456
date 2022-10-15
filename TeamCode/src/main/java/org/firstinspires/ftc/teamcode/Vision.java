@@ -36,6 +36,21 @@ public class Vision extends OpenCvPipeline {
 
     @Override
     public Mat processFrame(final Mat inputMatrix) {
+        final int rows = inputMatrix.rows();
+        final int cols = inputMatrix.cols();
+
+        final Rect HALF_RECT = new Rect(
+                new Point(0, rows / 2d),
+                new Point(cols, rows)
+        );
+
+        final Mat lowerHalfMatrix = inputMatrix.submat(HALF_RECT);
+
+        return null;
+    }
+
+    //@Override
+    public Mat processFrameOld(final Mat inputMatrix) {
         Imgproc.cvtColor(inputMatrix, mat, Imgproc.COLOR_RGB2HSV);
         final Scalar lowHSV = new Scalar(23, 50, 70);
         final Scalar highHSV = new Scalar(32, 255, 255);
