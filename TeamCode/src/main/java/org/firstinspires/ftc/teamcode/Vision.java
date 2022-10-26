@@ -34,7 +34,7 @@ public class Vision extends OpenCvPipeline {
         this.telemetry = telemetry;
     }
 
-    @Override
+    //@Override
     public Mat processFrame(final Mat inputMatrix) {
         final int rows = inputMatrix.rows();
         final int cols = inputMatrix.cols();
@@ -45,6 +45,7 @@ public class Vision extends OpenCvPipeline {
         );
 
         final Mat lowerHalfMatrix = inputMatrix.submat(HALF_RECT);
+        final Mat lowerHalfHSV = new Mat();
 
         return null;
     }
