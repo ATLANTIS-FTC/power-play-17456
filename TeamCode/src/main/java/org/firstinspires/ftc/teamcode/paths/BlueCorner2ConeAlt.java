@@ -30,12 +30,12 @@ public class BlueCorner2ConeAlt extends LinearOpMode{
         drivetrain.setPoseEstimate(initialPose);
         //Robot goes up to high junction from the initial starting position at the blue corner
         final TrajectorySequence driveUpToJunction = drivetrain.trajectorySequenceBuilder(initialPose)
-                .lineToConstantHeading(new Vector2d(36, -37))
+                .lineToConstantHeading(new Vector2d(36, -36))
                 .turn(Math.toRadians(45))
                 .build();
 
         final TrajectorySequence driveCloserToJunction = drivetrain.trajectorySequenceBuilder(driveUpToJunction.end())
-                .forward(5.5)//Changed from 5 to 5.5
+                .forward(7)//Changed from 5 to 5.5
                 .build();
 
         final TrajectorySequence driveBackFromJunction = drivetrain.trajectorySequenceBuilder(driveCloserToJunction.end())
@@ -46,14 +46,15 @@ public class BlueCorner2ConeAlt extends LinearOpMode{
         final TrajectorySequence driveToDepot = drivetrain.trajectorySequenceBuilder(driveBackFromJunction.end())
                 .turn(Math.toRadians(-45))
                 .lineToLinearHeading(new Pose2d(36, -13, Math.toRadians(90)))
-                .turn(Math.toRadians(90))
-                .lineToLinearHeading(new Pose2d(60, -14.5, Math.toRadians(0)))//12.5 to 14.5
+                .turn(Math.toRadians(-90))
+                .lineToLinearHeading(new Pose2d(59.5, -13, Math.toRadians(0)))//12.5 to 14.5
                 .build();
         //Robot drives back to high junction from depot
         final TrajectorySequence driveBackToJunction = drivetrain.trajectorySequenceBuilder(driveToDepot.end())
-                .lineToConstantHeading(new Vector2d(56, -12))
-                .lineToConstantHeading(new Vector2d(30.5, -20))
+                //.lineToConstantHeading(new Vector2d(50,-14.5))
+                .back(18)
                 .turn(Math.toRadians(-135))
+                .lineToConstantHeading(new Vector2d(33, -19))
                 .forward(4)
                 .build();
 
