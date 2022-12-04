@@ -10,14 +10,16 @@ public class Lift {
     private DcMotor.RunMode runMode = DcMotor.RunMode.RUN_USING_ENCODER;
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE;
 
-//define junction heights here//
+    //define junction heights here//
     private static final int LOW_JUNCTION_ENCODER_POSITION = 1300;
     private static final int MID_JUNCTION_ENCODER_POSITION = 2100;
     private static final int HIGH_JUNCTION_ENCODER_POSITION = 0;
 
     private static final int CONE_ENCODER_POSITION = 115;
 
-    private static final double REST_POWER = 0.0025;
+    //We created this so that the lift will stay at a certain height without going back down.
+    private static final double REST_POWER = 0.0012;//changed from 0.0025 to 0.0012
+
     private static final double LIFT_POWER = 0.2;//Changed from 0.3 to 0.2
 
     //basically sets up robot//
@@ -72,14 +74,39 @@ public class Lift {
             rightMotor.setPower(REST_POWER);
         } else {
             if (leftMotor.getCurrentPosition()<2) {
-                leftMotor.setPower(Math.abs(joystickWeight));
-                rightMotor.setPower(Math.abs(-joystickWeight));
-            }   else {
+                // if joystick weight < 0 then set to 0, otherwise set to joystick weight
+                if (joystickWeight < 0) {
+                    leftMotor.setPower(REST_POWER);
+                    rightMotor.setPower(REST_POWER);
+                }
+                else {
+                    leftMotor.setPower(joystickWeight);
+                    rightMotor.setPower(joystickWeight);
+                }
+
+            } else if (leftMotor.getCurrentPosition()>2200) {
+                // if joystick weight > 0 then set to 0, otherwise set to joystick weight
+                if (joystickWeight > 0) {
+                    leftMotor.setPower(REST_POWER);
+                    rightMotor.setPower(REST_POWER);
+                }
+                else {
+                    leftMotor.setPower(joystickWeight);
+                    rightMotor.setPower(joystickWeight);
+
+                }
+            } else {
                 leftMotor.setPower(joystickWeight);
                 rightMotor.setPower(joystickWeight);
             }
+
         }
+
+
     }
+
+
+
 
     //uses the defined junction heights to tell the motors to go to rotate till a certain height//
     public void liftToJunction(final int targetJunction) {
