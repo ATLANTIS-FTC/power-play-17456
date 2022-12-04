@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.checkerframework.checker.units.qual.C;
 import org.firstinspires.ftc.teamcode.claw.Claw;
 import org.firstinspires.ftc.teamcode.lift.Lift;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -19,39 +20,22 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  */
 @TeleOp(group = "drive")
 public class LocalizationTest extends LinearOpMode {
-    private Lift getLift(final String motorLName, final String motorRName) {
-        try {
-            final DcMotor leftLiftMotor = hardwareMap.get(DcMotor.class, motorLName);
-            final DcMotor rightLiftMotor = hardwareMap.get(DcMotor.class, motorRName);
-
-            return new Lift(leftLiftMotor, rightLiftMotor);
-        } catch (final IllegalArgumentException illegalArgumentException) {
-            // just catch and drop, this needs to be better
-            //TODO: only for comp 10/29, should not be dropping and sinking
-            return null;
-        }
-    }
-
-    private Claw getClaw(final String clawServoName) {
-        try {
-            final Servo clawServo = hardwareMap.get(Servo.class, clawServoName);
-            return new Claw(clawServo);
-        } catch (final IllegalArgumentException illegalArgumentException) {
-            //TODO: remove after comp on 10/29, should not be sinking
-            return null;
-        }
-    }
-
     @Override
     public void runOpMode() throws InterruptedException {
         final SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        final Lift lift = null;//getLift("leftLiftMotor", "rightLiftMotor");
-        final Claw claw = getClaw("clawServo");
+
+        final DcMotor leftLiftMotor = hardwareMap.get(DcMotor.class, "leftLiftMotor");
+        final DcMotor rightLiftMotor = hardwareMap.get(DcMotor.class, "rightLiftMotor");
+        final Lift lift = new Lift(leftLiftMotor, rightLiftMotor);
+
+        final Servo clawServo = hardwareMap.get(Servo.class, "clawServo");
+        final Claw claw = new Claw(clawServo);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lift.resetEncoder();
+        lift.useEncoder();
 
         waitForStart();
-
         while (!isStopRequested()) {
             drive.setWeightedDrivePower(
                     new Pose2d(
@@ -62,12 +46,12 @@ public class LocalizationTest extends LinearOpMode {
             );
             drive.update();
 
-            if (lift != null && gamepad1.right_stick_x != 0)
-                lift.useJoystick(gamepad1.right_stick_x);
+            //if (lift != null)
+            lift.useJoystick(-gamepad2.right_stick_y/2);
 
-            if (claw != null && gamepad1.a)
+            if (gamepad2.a)
                 claw.clawOpen();
-            else if (claw != null && gamepad1.b)
+            else if (gamepad2.b)
                 claw.clawClose();
 
             final Pose2d poseEstimate = drive.getPoseEstimate();
@@ -77,14 +61,14 @@ public class LocalizationTest extends LinearOpMode {
 
             telemetry.addData(
                     "clawState (is open?)",
-                    claw != null ? claw.getClawState() : "no claw found"
+                    claw.getClawState()
             );
 
-            if (lift != null) {
-                final double[] liftPower = lift.getPower();
-                telemetry.addData("liftPowerL", liftPower[0]);
-                telemetry.addData("liftPowerR", liftPower[1]);
-            }
+            final double[] liftPower = lift.getPower();
+            telemetry.addData("liftPowerL", liftPower[0]);
+            telemetry.addData("liftPowerR", liftPower[1]);
+            telemetry.addData("lift enc L", leftLiftMotor.getCurrentPosition());
+            telemetry.addData("lift enc L", rightLiftMotor.getCurrentPosition());
 
             telemetry.update();
         }
