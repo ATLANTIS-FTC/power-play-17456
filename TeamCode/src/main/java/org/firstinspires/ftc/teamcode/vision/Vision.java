@@ -1,92 +1,108 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.opencv.core.*;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvPipeline;
+import android.annotation.SuppressLint;
 
-public class Vision extends OpenCvPipeline {
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-    // percentage color threshold
-    private static final double percentColorThreshold = 0.1;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.apriltag.AprilTagDetection;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
-    // green signal sleeve hsv values
-    private static final Scalar lowGreenSignalHSV = new Scalar(143, 255, 84);
-    private static final Scalar highGreenSignalHSV = new Scalar(143, 255, 255);
-    //pink signal sleeve hsv values
-    private static final Scalar lowPinkSignalHSV = new Scalar(307, 255, 204);
-    private static final Scalar highPinkSignalHSV = new Scalar(307, 255, 255);
-    //purple signal sleeve hsv values
-    private static final Scalar lowPurpleSignalHSV = new Scalar(282, 255, 153);
-    private static final Scalar highPurpleSignalHSV = new Scalar(282, 255, 255);
+import java.util.ArrayList;
 
-    private final Telemetry telemetry;
+@Autonomous(name = "VisionAuto", group = "Auto")
+public class Vision extends LinearOpMode {
 
-    private SleeveDirection sleeveDirection;
+    OpenCvCamera camera;
+    AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
-    public Vision(final Telemetry telemetry) {
-        this.telemetry = telemetry;
-    }
+    static final double FEET_PER_METER = 3.28084;
 
-    public enum SleeveDirection {
-        LEFT,
-        CENTER,
-        RIGHT
-    }
 
-    public SleeveDirection getSleeveDirection() {
-        return sleeveDirection;
-    }
+    double fx = 578.272;
+    double fy = 578.272;
+    double cx = 402.145;
+    double cy = 221.506;
+
+    // UNITS ARE METERS
+    double tagSize = 0.166;
+
+    // Tag ID 1,2,3 from the 36h11 family
+
+    int LEFT = 1;
+    int MIDDLE = 2;
+    int RIGHT = 3;
+
+    AprilTagDetection tagOfInterest = null;
 
     @Override
-    public Mat processFrame(final Mat inputMatrix) {
+    public void runOpMode() {
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagSize, fx, fy, cx, cy);
 
-        //dividing the input by half to increase efficiency
-        final int rows = inputMatrix.rows();
-        final int cols = inputMatrix.cols();
+        camera.setPipeline(aprilTagDetectionPipeline);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
+            }
 
-        final Rect HALF_RECT = new Rect(
-                new Point(0, rows / 2d),
-                new Point(cols, rows)
-        );
+            @Override
+            public void onError(int errorCode) {
+                throw new RuntimeException(String.format("OpenCV Error Code: %d", errorCode));
+            }
+        });
 
-        //setting the half screen as ROI
-        final Mat lowerHalfMatrix = inputMatrix.submat(HALF_RECT);
-        final Mat lowerHalfHSV = new Mat();
+        telemetry.setMsTransmissionInterval(50);
 
-        //returning a grayscale image of what matches hsv ranges
-        Imgproc.cvtColor(lowerHalfMatrix, lowerHalfHSV, Imgproc.COLOR_RGB2HSV);
 
-        final Mat greenMatrix = new Mat();
-        final Mat pinkMatrix = new Mat();
-        final Mat purpleMatrix = new Mat();
 
-        Core.inRange(lowerHalfHSV, lowGreenSignalHSV, highGreenSignalHSV, greenMatrix);
-        Core.inRange(lowerHalfHSV, lowPinkSignalHSV, highPinkSignalHSV, pinkMatrix);
-        Core.inRange(lowerHalfHSV, lowPurpleSignalHSV, highPurpleSignalHSV, purpleMatrix);
+        while (!isStarted() && !isStopRequested()) {
+            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
-        final double greenPercentage = Core.sumElems(greenMatrix).val[0] / HALF_RECT.area() / 255;
-        final double pinkPercentage = Core.sumElems(pinkMatrix).val[0] / HALF_RECT.area() / 255;
-        final double purplePercentage = Core.sumElems(purpleMatrix).val[0] / HALF_RECT.area() / 255;
+            if (currentDetections.size() != 0) {
+                boolean tagFound = false;
 
-        final double maxPercentage = Math.max(Math.max(greenPercentage, pinkPercentage), purplePercentage);
-        if (maxPercentage < percentColorThreshold)
-            return inputMatrix;
-        else {
-            if (Double.compare(greenPercentage, maxPercentage) == 0)
-                sleeveDirection = SleeveDirection.LEFT;
-            else if (Double.compare(pinkPercentage, maxPercentage) == 0)
-                sleeveDirection = SleeveDirection.CENTER;
-            else
-                sleeveDirection = SleeveDirection.RIGHT;
+                for (AprilTagDetection tag : currentDetections) {
+                    if (tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT) {
+                        tagOfInterest = tag;
+                        tagFound = true;
+                        break;
+                    }
+                }
+
+                if (tagFound) {
+                    telemetry.addLine("Tag of interest seen\n\nLocation data:");
+                    tagToTelemetry(tagOfInterest);
+                } else {
+                    telemetry.addLine("Tag of interest not seen:");
+                }
+            }
+
+            telemetry.update();
+            sleep(20);
         }
 
-        telemetry.addData("SleeveDirection", (Object)sleeveDirection);
-        telemetry.update();
+        if (tagOfInterest != null) {
+            telemetry.addLine("Tag snapshot:\n");
+            tagToTelemetry(tagOfInterest);
+        } else {
+            telemetry.addLine("No tag snapshot available:");
+        }
 
-        return inputMatrix;
+        telemetry.update();
 
     }
 
+    @SuppressLint("DefaultLocale")
+    public void tagToTelemetry(AprilTagDetection detection) {
+        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
+        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
+        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
+        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
+    }
 }
-
