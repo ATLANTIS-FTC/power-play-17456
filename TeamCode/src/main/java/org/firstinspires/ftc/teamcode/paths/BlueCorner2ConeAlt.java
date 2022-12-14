@@ -11,8 +11,8 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.lift.Lift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
-@Autonomous(name = "RedCorner2ConeAlt", group = "Auto")
-public class RedCorner2ConeAlt extends LinearOpMode{
+@Autonomous(name = "BlueCorner2ConeAlt", group = "Auto")
+public class BlueCorner2ConeAlt extends LinearOpMode{
     @Override
     public void runOpMode() throws InterruptedException {
         final SampleMecanumDrive drivetrain = new SampleMecanumDrive(hardwareMap);
@@ -35,7 +35,7 @@ public class RedCorner2ConeAlt extends LinearOpMode{
                 .build();
 
         final TrajectorySequence driveCloserToJunction = drivetrain.trajectorySequenceBuilder(driveUpToJunction.end())
-                .forward(5.3)//Changed from 5 to 5.3`
+                .forward(7)//Changed from 5 to 5.5
                 .build();
 
         final TrajectorySequence driveBackFromJunction = drivetrain.trajectorySequenceBuilder(driveCloserToJunction.end())
@@ -47,7 +47,7 @@ public class RedCorner2ConeAlt extends LinearOpMode{
                 .turn(Math.toRadians(-45))
                 .lineToLinearHeading(new Pose2d(36, -13, Math.toRadians(90)))
                 .turn(Math.toRadians(-90))
-                .lineToLinearHeading(new Pose2d(58, -13, Math.toRadians(0)))//12.5 to 14.5
+                .lineToLinearHeading(new Pose2d(59.5, -13, Math.toRadians(0)))//12.5 to 14.5
                 .build();
         //Robot drives back to high junction from depot
         final TrajectorySequence driveBackToJunction = drivetrain.trajectorySequenceBuilder(driveToDepot.end())
@@ -55,11 +55,7 @@ public class RedCorner2ConeAlt extends LinearOpMode{
                 .back(18)
                 .turn(Math.toRadians(-135))
                 .lineToConstantHeading(new Vector2d(33, -19))
-                .forward(1)
-                .build();
-
-        final TrajectorySequence backUpAfterLastJunction = drivetrain.trajectorySequenceBuilder(driveBackToJunction.end())
-                 .back(3)
+                .forward(4)
                 .build();
 
         waitForStart();
@@ -89,11 +85,6 @@ public class RedCorner2ConeAlt extends LinearOpMode{
         lift.liftToJunction(2);
         sleep(1000);
         drivetrain.followTrajectorySequence(driveBackToJunction);
-        claw.clawOpen();
-        sleep(500);
-        drivetrain.followTrajectorySequence(backUpAfterLastJunction);
-        lift.retract();
-        sleep(2000);
     }
 
 }

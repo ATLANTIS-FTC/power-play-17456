@@ -32,6 +32,8 @@ public class LocalizationTest extends LinearOpMode {
         final Claw claw = new Claw(clawServo);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lift.resetEncoder();
+        lift.useEncoder();
 
         waitForStart();
         while (!isStopRequested()) {
@@ -45,11 +47,11 @@ public class LocalizationTest extends LinearOpMode {
             drive.update();
 
             //if (lift != null)
-            lift.useJoystick(gamepad1.right_stick_y);
+            lift.useJoystick(-gamepad2.right_stick_y/2);
 
-            if (gamepad1.a)
+            if (gamepad2.a)
                 claw.clawOpen();
-            else if (gamepad1.b)
+            else if (gamepad2.b)
                 claw.clawClose();
 
             final Pose2d poseEstimate = drive.getPoseEstimate();
@@ -65,6 +67,8 @@ public class LocalizationTest extends LinearOpMode {
             final double[] liftPower = lift.getPower();
             telemetry.addData("liftPowerL", liftPower[0]);
             telemetry.addData("liftPowerR", liftPower[1]);
+            telemetry.addData("lift enc L", leftLiftMotor.getCurrentPosition());
+            telemetry.addData("lift enc L", rightLiftMotor.getCurrentPosition());
 
             telemetry.update();
         }
