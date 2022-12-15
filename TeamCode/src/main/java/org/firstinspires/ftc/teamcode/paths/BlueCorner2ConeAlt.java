@@ -71,6 +71,7 @@ public class BlueCorner2ConeAlt extends LinearOpMode{
         drivetrain.followTrajectorySequence(driveUpToJunction);
 
         drivetrain.followTrajectorySequence(driveCloserToJunction);
+        sleep(2000);
         claw.clawOpen();
         sleep(500);
 
@@ -85,6 +86,7 @@ public class BlueCorner2ConeAlt extends LinearOpMode{
         lift.liftToJunction(2);
         sleep(1000);
         drivetrain.followTrajectorySequence(driveBackToJunction);
+        lift.retract();
     }
 
 }

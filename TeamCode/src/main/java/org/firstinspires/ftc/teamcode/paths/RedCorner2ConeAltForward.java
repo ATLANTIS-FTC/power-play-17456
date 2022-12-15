@@ -11,8 +11,8 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.lift.Lift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
-@Autonomous(name = "RedCorner2ConeAlt", group = "Auto")
-public class RedCorner2ConeAlt extends LinearOpMode{
+@Autonomous(name = "RedCorner2ConeAltForward", group = "Auto")
+public class RedCorner2ConeAltForward extends LinearOpMode{
     @Override
     public void runOpMode() throws InterruptedException {
         final SampleMecanumDrive drivetrain = new SampleMecanumDrive(hardwareMap);
@@ -25,38 +25,37 @@ public class RedCorner2ConeAlt extends LinearOpMode{
         final Claw claw = new Claw(clawServo);
 
         final double radian90 = Math.toRadians(90);
-        final Pose2d initialPose = new Pose2d(-36, -63, radian90);
+        final Pose2d initialPose = new Pose2d(36, -63, radian90);
 
         drivetrain.setPoseEstimate(initialPose);
         drivetrain.gyroCalibrate();
         //Robot goes up to high junction from the initial starting position at the blue corner
         final TrajectorySequence driveUpToJunction = drivetrain.trajectorySequenceBuilder(initialPose)
-                .lineToConstantHeading(new Vector2d(-36, -34.5))
-                .turn(Math.toRadians(-45))
+                .forward(27)
+                .turn(Math.toRadians(45))
                 .build();
 
         final TrajectorySequence driveCloserToJunction = drivetrain.trajectorySequenceBuilder(driveUpToJunction.end())
-                .forward(5.1)//Changed from 5 to 5.3
+                .forward(5.3)//Changed from 5 to 5.3
                 .build();
 
         final TrajectorySequence driveBackFromJunction = drivetrain.trajectorySequenceBuilder(driveCloserToJunction.end())
-                .back(5.4)//Changed from 5 to 5.5
+                .back(5.5)//Changed from 5 to 5.5
                 .build();
 
         //Robot drives to depot from mid junction
         final TrajectorySequence driveToDepot = drivetrain.trajectorySequenceBuilder(driveBackFromJunction.end())
-                .turn(Math.toRadians(45))
-                .lineToLinearHeading(new Pose2d(-36, -12, Math.toRadians(90)))
-                .turn(Math.toRadians(90))
-                .lineToLinearHeading(new Pose2d(-61, -12, Math.toRadians(180)))//12.5 to 14.5
+                .turn(Math.toRadians(-45))
+                .forward(24)
+                .turn(Math.toRadians(-90))
+                .forward(26)
                 .build();
-
         //Robot drives back to mid junction from depot
         final TrajectorySequence driveBackToJunction = drivetrain.trajectorySequenceBuilder(driveToDepot.end())
                 //.lineToConstantHeading(new Vector2d(50,-14.5))
-                .back(18)
-                .turn(Math.toRadians(135))
-                .lineToConstantHeading(new Vector2d(-32, -16))
+                .back(20)
+                .turn(Math.toRadians(-135))
+                .forward(2)
                 .build();
 
         final TrajectorySequence backUpAfterLastJunction = drivetrain.trajectorySequenceBuilder(driveBackToJunction.end())
@@ -97,9 +96,8 @@ public class RedCorner2ConeAlt extends LinearOpMode{
         sleep(1000);
         drivetrain.followTrajectorySequence(backUpAfterLastJunction);
         lift.retract();
+        lift.liftToConeStack(3);
         sleep(2000);
-        lift.retract();
-
     }
 
 }

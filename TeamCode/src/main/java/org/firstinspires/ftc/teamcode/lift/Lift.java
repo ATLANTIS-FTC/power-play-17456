@@ -20,7 +20,7 @@ public class Lift {
     //We created this so that the lift will stay at a certain height without going back down.
     private static final double REST_POWER = 0.0012;//changed from 0.0025 to 0.0012
 
-    private static final double LIFT_POWER = 0.2;//Changed from 0.3 to 0.2
+    private static final double LIFT_POWER = 0.4;//Changed from 0.3 to 0.2
 
     //basically sets up robot//
     public Lift (final DcMotor leftMotor, final DcMotor rightMotor) {
